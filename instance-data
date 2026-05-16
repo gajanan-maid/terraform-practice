@@ -1,0 +1,63 @@
+# 7. Create EC2 Instances
+
+# User data script for the Jenkins instance (RedHat-based AMI)
+locals {
+  jenkins_user_data = <<-EOF
+    #!/bin/bash
+    # This script runs on the EC2 instances at launch.
+
+    # 1. Create a new user 'ansible' with a home directory and bash shell.
+    # The password for 'ansible' user is set to 'admin@123'.
+    # This is for demonstration purposes; in production, use SSH keys for authentication.
+    sudo useradd ansible -m -s /bin/bash -p $(openssl passwd -1 admin@123)
+
+    # 2. Grant 'ansible' user passwordless sudo privileges.
+    # This allows the 'ansible' user to run commands with root privileges without being prompted for a password.
+    echo 'ansible ALL=(ALL:ALL) NOPASSWD:ALL' | sudo EDITOR='tee -a' visudo
+
+    # 3. Enable password authentication for SSH.
+    # This sed command robustly finds and sets 'PasswordAuthentication yes',
+    # handling commented lines or existing 'no' values.
+    sudo sed -i -E 's/^[#[:space:]]*PasswordAuthentication[[:space:]]+(yes|no)/PasswordAuthentication yes/' /etc/ssh/sshd_config
+
+    # 4. Enable keyboard interactive authentication for SSH.
+    # This sed command robustly finds and sets 'KeyboardInteractiveAuthentication yes',
+    # handling commented lines or existing 'no' values.
+    # sudo sed -i -E 's/^[#[:space:]]*KbdInteractiveAuthentication[[:space:]]+(yes|no)/KbdInteractiveAuthentication yes/' /etc/ssh/sshd_config
+
+    # 5. Restart the SSH daemon to apply the changes.
+    # This ensures that the new SSH configuration (including password and keyboard interactive authentication) takes effect immediately.
+    sudo systemctl restart sshd
+  EOF
+
+  # User data script for Kubernetes Control Plane and Worker Nodes (Ubuntu-based AMIs)
+  ubuntu_user_data = <<-EOF
+    #!/bin/bash
+    # This script runs on the EC2 instances at launch.
+
+    # 1. Create a new user 'ansible' with a home directory and bash shell.
+    # The password for 'ansible' user is set to 'admin@123'.
+    # This is for demonstration purposes; in production, use SSH keys for authentication.
+    sudo useradd ansible -m -s /bin/bash -p $(openssl passwd -1 admin@123)
+
+    # 2. Grant 'ansible' user passwordless sudo privileges.
+    # This allows the 'ansible' user to run commands with root privileges without being prompted for a password.
+    echo 'ansible ALL=(ALL:ALL) NOPASSWD:ALL' | sudo EDITOR='tee -a' visudo
+
+    # 3. Enable password authentication for SSH.
+    # This sed command robustly finds and sets 'PasswordAuthentication yes',
+    # handling commented lines or existing 'no' values.
+    sudo sed -i -E 's/^[#[:space:]]*PasswordAuthentication[[:space:]]+(yes|no)/PasswordAuthentication yes/' /etc/ssh/sshd_config
+
+    # 4. Enable keyboard interactive authentication for SSH.
+    # This sed command robustly finds and sets 'KeyboardInteractiveAuthentication yes',
+    # handling commented lines or existing 'no' values.
+    sudo sed -i -E 's/^[#[:space:]]*KbdInteractiveAuthentication[[:space:]]+(yes|no)/KbdInteractiveAuthentication yes/' /etc/ssh/sshd_config
+
+    # 5. Restart the SSH daemon to apply the changes.
+    # This ensures that the new SSH configuration (including password and keyboard interactive authentication) takes effect immediately.
+    sudo systemctl restart ssh
+  EOF
+}
+  }
+}
